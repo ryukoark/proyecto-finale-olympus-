@@ -12,7 +12,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($clases as $clase)
                 <div class="bg-white rounded-lg shadow-lg p-6">
-                    <h2 class="text-xl font-bold mb-2 text-black">{{ $clase->categoria }}</h2>
+                    <h2 class="text-xl font-bold mb-2 text-black">{{ $clase->categoria->categoria }}</h2>
                     <p class="text-black"><span class="font-semibold">Instructor:</span> {{ $clase->instructor }}</p>
                     <p class="text-black"><span class="font-semibold">Cupos Totales:</span> {{ $clase->cupos_totales }}</p>
                     <p class="text-black"><span class="font-semibold">Duración:</span> {{ $clase->duracion }} minutos</p>

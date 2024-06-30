@@ -5,7 +5,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div class="mb-4">
                     <strong class="block text-sm font-bold mb-2 text-gray-700">Categoría:</strong> 
-                    <p class="text-lg font-medium">{{ $clase->categoria }}</p>
+                    <p class="text-lg font-medium">{{ $clase->categoria->categoria }}</p>
                 </div>
                 <div class="mb-4">
                     <strong class="block text-sm font-bold mb-2 text-gray-700">Instructor:</strong>
@@ -33,7 +33,7 @@
                 </div>
                 <div class="mb-4 col-span-2">
                     <strong class="block text-sm font-bold mb-2 text-gray-700">Costo de Inscripción:</strong>
-                    <p class="text-lg font-medium">${{ $clase->costo_inscripcion }}</p>
+                    <p class="text-lg font-medium">S/.{{ $clase->costo_inscripcion }}</p>
                 </div>
                 <div class="mb-4 col-span-2">
                     <strong class="block text-sm font-bold mb-2 text-gray-700">Información:</strong>
@@ -46,4 +46,3 @@
         </div>
     </div>
 </x-app-layout>
-

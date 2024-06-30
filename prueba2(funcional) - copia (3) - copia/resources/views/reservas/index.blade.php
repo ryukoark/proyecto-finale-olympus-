@@ -40,17 +40,20 @@
                             <td class="border px-4 py-2">{{ $reserva->fecha }}</td>
                             <td class="border px-4 py-2">{{ $reserva->horario }}</td>
                             <td class="border px-4 py-2">{{ $reserva->user->name }}</td>
-                            <td class="border px-4 py-2">
-                                <form action="{{ route('reservas.destroy', $reserva->id) }}" method="POST">
+                            <td class="border px-4 py-2 flex justify-center">
+                                <form action="{{ route('reservas.destroy', $reserva->id) }}" method="POST" class="mr-2">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg" onclick="return confirm('¿Estás seguro de que quieres finalizar esta reserva?')">Finalizar Reserva</button>
                                 </form>
+                                @if($reserva->imagen_pago)
+                                    <button type="button" class="bg-blue-500 text-white px-4 py-2 rounded-lg" onclick="mostrarPago('{{ asset('images/' . $reserva->imagen_pago) }}')">Mostrar Pago</button>
+                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="border px-4 py-2 text-center">No hay reservas disponibles</td>
+                            <td colspan="5" class="border px-4 py-2 text-center">No hay reservas disponibles</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -59,4 +62,24 @@
             <p class="text-center text-red-500">No tienes permisos para ver esta página.</p>
         @endif
     </div>
+
+    <div id="pago-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center hidden">
+        <div class="bg-white p-4 rounded-lg shadow-lg">
+            <img id="pago-img" src="" alt="Comprobante de Pago" class="mb-4">
+            <button class="bg-red-500 text-white px-4 py-2 rounded-lg" onclick="cerrarModal()">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        function mostrarPago(url) {
+            document.getElementById('pago-img').src = url;
+            document.getElementById('pago-modal').classList.remove('hidden');
+        }
+
+        function cerrarModal() {
+            document.getElementById('pago-modal').classList.add('hidden');
+        }
+    </script>
 </x-app-layout>
+
+

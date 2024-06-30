@@ -8,87 +8,95 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Reserva;
 use App\Models\User;
-use App\Models\Cancha; // Importar el modelo Cancha
+use App\Models\Cancha;
+use App\Models\Factura;
 
 class ReservaController extends Controller
 {
     public function seleccionarCancha()
     {
-        $canchas = Cancha::all(); // Obtener todas las canchas
-        return view('cancha_seleccion', compact('canchas')); // Pasar las canchas a la vista
+        $canchas = Cancha::all();
+        return view('cancha_seleccion', compact('canchas'));
     }
 
     public function index($cancha)
     {
         $user = Auth::user();
-        $cancha = Cancha::find($cancha); // Obtener la cancha por ID
+        $cancha = Cancha::find($cancha);
         return view('reservar', compact('cancha', 'user'));
     }
 
     public function store(Request $request, $cancha)
-{
-    // Validación de los datos
-    $validator = Validator::make($request->all(), [
-        'fecha' => 'required|date',
-        'horarios' => 'required|array',
-        'horarios.*' => 'required|string',
-    ]);
+    {
+        $validator = Validator::make($request->all(), [
+            'fecha' => 'required|date',
+            'horarios' => 'required|array',
+            'horarios.*' => 'required|string',
+            'monto' => 'required|numeric',
+            'imagen_pago' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
 
-    // Manejar errores de validación
-    if ($validator->fails()) {
-        return redirect()->back()->withErrors($validator)->withInput();
-    }
-
-    // Verificar que la cancha exista
-    $cancha = Cancha::find($cancha);
-    if (!$cancha) {
-        return redirect()->back()->with('error', 'Cancha no encontrada.');
-    }
-
-    // Crear las reservas en el array
-    $reservas = [];
-    foreach ($request->horarios as $horario) {
-        $reservas[] = [
-            'cancha_id' => $cancha->id,
-            'fecha' => $request->fecha,
-            'horario' => $horario,
-            'user_id' => Auth::id(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ];
-    }
-
-    // Insertar las reservas en la base de datos
-    Reserva::insert($reservas);
-
-    // Redirigir con un mensaje de éxito
-    return redirect()->route('dashboard')->with('success', 'Reservas realizadas exitosamente');
-}
-
-
-public function resumen(Request $request)
-{
-    $fecha = $request->input('fecha');
-    $horarios = $request->input('horarios');
-    $canchaId = $request->input('cancha'); // Asegúrate de que estamos recibiendo el ID de la cancha.
-
-    // Calcular el monto basado en los horarios
-    $monto = 0;
-    foreach ($horarios as $horario) {
-        // Definir la tarifa de las horas
-        $tarifa = 10; // Tarifa estándar
-
-        // Verificar si el horario es a partir de las 6:00 pm
-        if (strpos($horario, '6:00') !== false || strpos($horario, '7:00') !== false || strpos($horario, '8:00') !== false) {
-            $tarifa = 15; // Tarifa después de las 6:00 pm
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $monto += $tarifa;
+        $cancha = Cancha::find($cancha);
+        if (!$cancha) {
+            return redirect()->back()->with('error', 'Cancha no encontrada.');
+        }
+
+        $reservas = [];
+        foreach ($request->horarios as $horario) {
+            $reservas[] = [
+                'cancha_id' => $cancha->id,
+                'fecha' => $request->fecha,
+                'horario' => $horario,
+                'user_id' => Auth::id(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        Reserva::insert($reservas);
+
+        $imagenPago = $request->file('imagen_pago');
+        $timestamp = now()->format('YmdHis');
+        $uniqueName = $timestamp . '_' . uniqid() . '.' . $imagenPago->getClientOriginalExtension();
+        $imagenPagoPath = 'pagos/' . $uniqueName;
+        $imagenPago->move(public_path('pagos'), $uniqueName);
+
+        Factura::create([
+            'user_id' => Auth::id(),
+            'tipo_factura' => 1, // 1 para reservas
+            'monto' => $request->input('monto'),
+            'imagen_pago' => $imagenPagoPath,
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Reservas y factura generadas exitosamente.');
     }
 
-    return view('resumen', compact('fecha', 'horarios', 'monto', 'canchaId'));
-}
 
+
+    public function resumen(Request $request)
+    {
+        $fecha = $request->input('fecha');
+        $horarios = $request->input('horarios');
+        $canchaId = $request->input('cancha');
+
+        $monto = 0;
+        foreach ($horarios as $horario) {
+            $tarifa = 10; // Tarifa normal 
+
+            // Verificar si el horario es a partir de las 6
+            if (strpos($horario, '6:00') !== false || strpos($horario, '7:00') !== false || strpos($horario, '8:00') !== false) {
+                $tarifa = 15; // Tarifa después de las 6
+            }
+
+            $monto += $tarifa;
+        }
+
+        return view('resumen', compact('fecha', 'horarios', 'monto', 'canchaId'));
+    }
 
     public function getHorarios(Request $request, $cancha)
     {
@@ -109,7 +117,7 @@ public function resumen(Request $request)
 
         $reservas = Reserva::where('cancha_id', $cancha)->where('fecha', $fecha)->pluck('horario')->toArray();
 
-        $disponibilidad = array_map(function($horario) use ($reservas) {
+        $disponibilidad = array_map(function ($horario) use ($reservas) {
             return [
                 'hora' => $horario,
                 'disponible' => !in_array($horario, $reservas)
@@ -164,18 +172,39 @@ public function resumen(Request $request)
         return redirect()->route('reservas.index')->with('success', 'Reserva finalizada exitosamente.');
     }
 
-    // App\Http\Controllers\ReservaController.php
+    public function listarReservasUsuario()
+    {
+        $user = Auth::user();
+        $reservas = Reserva::with('cancha')
+            ->where('user_id', $user->id)
+            ->orderBy('fecha')
+            ->get()
+            ->groupBy('fecha');
 
-public function listarReservasUsuario()
-{
-    $user = Auth::user();
-    $reservas = Reserva::with('cancha')
-                ->where('user_id', $user->id)
-                ->orderBy('fecha')
-                ->get()
-                ->groupBy('fecha');
+        return view('reservas.usuario', compact('reservas'));
+    }
+    public function storeFactura(Request $request)
+    {
+        $request->validate([
+            'fecha' => 'required|date',
+            'cancha' => 'required|integer',
+            'horarios' => 'required|array',
+            'horarios.*' => 'required|string',
+            'monto' => 'required|numeric',
+            'imagen_pago' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
 
-    return view('reservas.usuario', compact('reservas'));
-}
+        $imagenPago = $request->file('imagen_pago');
+        $imagenPagoPath = 'pagos/' . time() . '_' . $imagenPago->getClientOriginalName();
+        $imagenPago->move(public_path('pagos'), $imagenPagoPath);
 
+        Factura::create([
+            'user_id' => Auth::id(),
+            'tipo_factura' => 1, // 1 para reservas
+            'monto' => $request->input('monto'),
+            'imagen_pago' => $imagenPagoPath,
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Factura generada exitosamente.');
+    }
 }

@@ -7,11 +7,11 @@
                 @method('PUT')
                 <div class="grid grid-cols-2 gap-4">
                     <div class="mb-4">
-                        <label for="categoria" class="block text-white text-sm font-bold mb-2">Categoría:</label>
-                        <select id="categoria" name="categoria" class="w-full px-3 py-2 border rounded-lg bg-gray-800 text-white" required>
-                            <option value=""> - </option>
-                            @foreach (['Básico', 'Intermedio', 'Avanzado'] as $categoria)
-                                <option value="{{ $categoria }}" {{ $clase->categoria == $categoria ? 'selected' : '' }}>{{ $categoria }}</option>
+                        <label for="id_categoria" class="block text-white text-sm font-bold mb-2">Categoría:</label>
+                        <select id="id_categoria" name="id_categoria" class="w-full px-3 py-2 border rounded-lg bg-gray-800 text-white" required>
+                            <option value="">Seleccionar categoría</option>
+                            @foreach ($categorias as $categoria)
+                                <option value="{{ $categoria->id_categoria }}" {{ $clase->id_categoria == $categoria->id_categoria ? 'selected' : '' }}>{{ $categoria->categoria }}</option>
                             @endforeach
                         </select>
                     </div>

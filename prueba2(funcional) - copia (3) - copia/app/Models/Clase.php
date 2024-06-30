@@ -1,7 +1,5 @@
 <?php
 
-// app/Models/Clase.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,17 +10,16 @@ class Clase extends Model
     use HasFactory;
 
     protected $fillable = [
-        'categoria', 'instructor', 'cupos_totales', 'duracion', 
-        'fecha_inicio', 'hora_inicio', 'hora_fin', 'costo_inscripcion', 'informacion'
+        'id_categoria', 'instructor', 'cupos_totales', 'duracion', 'fecha_inicio', 'hora_inicio', 'hora_fin', 'costo_inscripcion', 'informacion'
     ];
+
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class, 'id_categoria');
+    }
 
     public function inscripciones()
     {
-        return $this->hasMany(Inscripcion::class);
-    }
-
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'inscripciones', 'clase_id', 'user_id');
+        return $this->hasMany(Inscripcion::class, 'clase_id');
     }
 }

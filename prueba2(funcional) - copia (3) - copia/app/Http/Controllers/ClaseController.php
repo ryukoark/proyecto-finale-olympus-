@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Clase;
+use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ClaseController extends Controller
 {
@@ -14,7 +16,7 @@ class ClaseController extends Controller
             return redirect('/dashboard');
         }
 
-        $clases = Clase::all();
+        $clases = Clase::with('categoria')->get();
         return view('clases.index', compact('clases'));
     }
 
@@ -24,7 +26,8 @@ class ClaseController extends Controller
             return redirect('/dashboard');
         }
 
-        return view('clases.create');
+        $categorias = Categoria::all();
+        return view('clases.create', compact('categorias'));
     }
 
     public function store(Request $request)
@@ -34,7 +37,7 @@ class ClaseController extends Controller
         }
 
         $validated = $request->validate([
-            'categoria' => 'required|string|max:255',
+            'id_categoria' => 'required|exists:categorias,id_categoria',
             'instructor' => 'required|string|max:255',
             'cupos_totales' => 'required|integer',
             'duracion' => 'required|integer',
@@ -51,10 +54,6 @@ class ClaseController extends Controller
 
     public function show(Clase $clase)
     {
-        if (Auth::user()->is_admin !== 1) {
-            return redirect('/dashboard');
-        }
-
         return view('clases.show', compact('clase'));
     }
 
@@ -64,25 +63,45 @@ class ClaseController extends Controller
             return redirect('/dashboard');
         }
 
-        return view('clases.edit', compact('clase'));
+        $categorias = Categoria::all();
+        return view('clases.edit', compact('clase', 'categorias'));
     }
 
     public function update(Request $request, $id)
-{
-    $clase = Clase::findOrFail($id);
-    $clase->categoria = $request->input('categoria');
-    $clase->instructor = $request->input('instructor');
-    $clase->cupos_totales = $request->input('cupos_totales');
-    $clase->duracion = $request->input('duracion');
-    $clase->fecha_inicio = $request->input('fecha_inicio');
-    $clase->hora_inicio = $request->input('hora_inicio');
-    $clase->hora_fin = $request->input('hora_fin');
-    $clase->costo_inscripcion = $request->input('costo_inscripcion');
-    $clase->informacion = $request->input('informacion');
-    $clase->save();
+    {
+        if (Auth::user()->is_admin !== 1) {
+            return redirect('/dashboard');
+        }
 
-    return redirect()->route('clases.list')->with('success', 'Clase actualizada correctamente');
-}
+        // Encuentra la clase por su ID
+        $clase = Clase::findOrFail($id);
+        
+        Log::info('Clase encontrada para actualizar:', $clase->toArray());
+
+        // Validación de los datos del formulario
+        $validated = $request->validate([
+            'id_categoria' => 'required|exists:categorias,id_categoria',
+            'instructor' => 'required|string|max:255',
+            'cupos_totales' => 'required|integer',
+            'duracion' => 'required|integer',
+            'fecha_inicio' => 'required|date',
+            'hora_inicio' => 'required|date_format:H:i',
+            'hora_fin' => 'required|date_format:H:i',
+            'costo_inscripcion' => 'required|numeric',
+            'informacion' => 'required|string',
+        ]);
+
+        Log::info('Datos validados:', $validated);
+
+        // Actualiza los datos de la clase con los datos validados
+        $clase->update($validated);
+
+        Log::info('Clase actualizada:', $clase->toArray());
+
+        // Redirige a la lista de clases con un mensaje de éxito
+        return redirect()->route('clases.index')->with('success', 'Clase actualizada correctamente.');
+    }
+
     public function destroy(Clase $clase)
     {
         if (Auth::user()->is_admin !== 1) {
@@ -92,10 +111,31 @@ class ClaseController extends Controller
         $clase->delete();
         return redirect()->route('clases.index')->with('success', 'Clase eliminada exitosamente.');
     }
+
     public function listarClases()
-{
-    $clases = Clase::all();
+    {
+        $clases = Clase::with('categoria')->get();
         return view('clases.list', compact('clases'));
+    }
+
+    public function AdminlistarClases()
+    {
+        if (Auth::user()->is_admin !== 1) {
+            return redirect('/dashboard');
+        }
+
+        $clases = Clase::with('categoria')->get();
+        return view('clases.adminlist', compact('clases'));
+    }
+
+    public function participantes(Clase $clase)
+    {
+        if (Auth::user()->is_admin !== 1) {
+            return redirect('/dashboard');
+        }
+
+        $inscripciones = $clase->inscripciones()->with('user')->get();
+        return view('clases.participantes', compact('clase', 'inscripciones'));
+    }
 }
 
-}

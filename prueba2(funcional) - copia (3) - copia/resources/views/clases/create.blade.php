@@ -7,10 +7,10 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="mb-4">
                         <label for="categoriaInput" class="block text-white text-sm font-bold mb-2">Categoría:</label>
-                        <select name="categoria" id="categoriaInput" class="w-full px-3 py-2 border rounded-lg bg-gray-800 text-white" required>
-                            <option value=""> - </option>
-                            @foreach (['Básico', 'Intermedio', 'Avanzado'] as $categoria)
-                                <option value="{{ $categoria }}">{{ $categoria }}</option>
+                        <select name="id_categoria" id="categoriaInput" class="w-full px-3 py-2 border rounded-lg bg-gray-800 text-white" required>
+                            <option value="">Selecciona una categoría</option>
+                            @foreach ($categorias as $categoria)
+                                <option value="{{ $categoria->id_categoria }}">{{ $categoria->categoria }}</option>
                             @endforeach
                         </select>
                     </div>

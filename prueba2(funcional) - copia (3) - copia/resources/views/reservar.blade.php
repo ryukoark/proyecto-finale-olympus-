@@ -5,35 +5,35 @@
             .custom-heading {
                 font-family: 'Roboto', sans-serif;
                 font-weight: bold;
-                font-size: 100px;
-                color: #FFFFFF; /* Letra blanca */
+                font-size: 80px;
+                color: #FFFFFF;
                 text-shadow: 
                     -1px -1px 0 #000000,  
                     1px -1px 0 #000000,
                     -1px 1px 0 #000000,
-                    1px 1px 0 #000000; /* Contorno negro */
+                    1px 1px 0 #000000;
+                margin-bottom: 20px;
             }
             .horario-btn {
                 font-family: 'Roboto', sans-serif;
                 font-weight: bold;
-                padding: 10px 20px;
+                padding: 20px;
+                width: 150px;
                 margin: 5px;
                 border: none;
                 border-radius: 5px;
                 cursor: pointer;
                 transition: background-color 0.3s ease;
+                color: #FFFFFF; /* Color de texto blanco */
             }
             .horario-btn.disponible {
                 background-color: #739505;
-                color: #000000;
             }
             .horario-btn.seleccionado {
                 background-color: #4CAF50;
-                color: #FFFFFF;
             }
             .horario-btn.no-disponible {
                 background-color: #a91106;
-                color: #000000;
                 cursor: not-allowed;
             }
             .horario-btn.disponible:hover {
@@ -45,19 +45,47 @@
                 gap: 10px;
                 margin-top: 20px;
             }
+            .horario-row {
+                display: flex;
+                flex-basis: 100%;
+                margin-bottom: 10px;
+            }
+            #fecha-container {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+            }
             #fecha {
                 padding: 10px;
                 border: 2px solid #000000;
                 border-radius: 5px;
                 font-size: 16px;
+                margin-top: 40px;
+                color: #000000;
+            }
+            #reserva-btn {
                 margin-top: 20px;
-                color: #000000; /* Añadido para hacer el texto de fecha negro */
+                align-self: flex-start;
+            }
+            .container {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                align-items: flex-start;
+                width: 100%;
+            }
+            .content-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                margin-top: 40px;
             }
         </style>
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <script>
             let horariosSeleccionados = [];
-
+            
             function mostrarHorarios(canchaId) {
                 const fecha = document.getElementById('fecha').value;
                 if (fecha) {
@@ -66,7 +94,13 @@
                         .then(data => {
                             const horariosDiv = document.getElementById('horarios');
                             horariosDiv.innerHTML = '';
-                            data.forEach(horario => {
+                            let row = null;
+                            data.forEach((horario, index) => {
+                                if (index % 4 === 0) {
+                                    row = document.createElement('div');
+                                    row.className = 'horario-row';
+                                    horariosDiv.appendChild(row);
+                                }
                                 const btn = document.createElement('button');
                                 btn.textContent = horario.hora;
                                 btn.className = 'horario-btn';
@@ -77,12 +111,12 @@
                                     btn.classList.add('no-disponible');
                                     btn.disabled = true;
                                 }
-                                horariosDiv.appendChild(btn);
+                                row.appendChild(btn);
                             });
                         });
                 }
             }
-
+    
             function seleccionarHorario(button, horario) {
                 if (horariosSeleccionados.includes(horario)) {
                     horariosSeleccionados = horariosSeleccionados.filter(h => h !== horario);
@@ -93,7 +127,7 @@
                 }
                 console.log(horariosSeleccionados);
             }
-
+    
             function irAResumen(canchaId) {
                 const fecha = document.getElementById('fecha').value;
                 if (fecha && horariosSeleccionados.length > 0) {
@@ -103,7 +137,7 @@
                     form.innerHTML = `
                         <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
                         <input type="hidden" name="fecha" value="${fecha}">
-                        <input type="hidden" name="cancha" value="${canchaId}"> <!-- Añadir la cancha aquí -->
+                        <input type="hidden" name="cancha" value="${canchaId}">
                         ${horariosSeleccionados.map(h => `<input type="hidden" name="horarios[]" value="${h}">`).join('')}
                     `;
                     document.body.appendChild(form);
@@ -115,12 +149,18 @@
         </script>
     </head>
     <div class="relative min-h-screen flex flex-col justify-center items-start text-left px-10 bg-cover bg-center bg-no-repeat" style="background-image: url('/images/background.png');">
-        <div class="mt-16">
-            <h1 class="custom-heading">Reservar Horario</h1>
-            <input type="date" id="fecha" onchange="mostrarHorarios({{ $cancha->id }})">
+        <h1 class="custom-heading">Reservar Horario</h1>
+        <div class="content-container">
+            <div id="fecha-container">
+                <input type="date" id="fecha" onchange="mostrarHorarios({{ $cancha->id }})">
+                <button id="reserva-btn" onclick="irAResumen({{ $cancha->id }})" class="horario-btn disponible">Reservar</button>
+            </div>
             <div id="horarios"></div>
-            <button onclick="irAResumen({{ $cancha->id }})" class="horario-btn disponible">reservar</button>
         </div>
     </div>
 </x-app-layout>
+
+    
+    
+    
 

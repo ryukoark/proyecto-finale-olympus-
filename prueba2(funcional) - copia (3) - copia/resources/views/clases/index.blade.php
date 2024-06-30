@@ -24,15 +24,15 @@
                     <tbody>
                         @foreach($clases as $clase)
                         <tr>
-                            <td class="border px-4 py-2">{{ $clase->id }}</td>
-                            <td class="border px-4 py-2">{{ $clase->categoria }}</td>
-                            <td class="border px-4 py-2">{{ $clase->instructor }}</td>
-                            <td class="border px-4 py-2">{{ $clase->cupos_totales }}</td>
-                            <td class="border px-4 py-2">{{ $clase->duracion }}</td>
-                            <td class="border px-4 py-2">{{ $clase->fecha_inicio }}</td>
-                            <td class="border px-4 py-2">{{ $clase->hora_inicio }}</td>
-                            <td class="border px-4 py-2">{{ $clase->hora_fin }}</td>
-                            <td class="border px-4 py-2">{{ $clase->costo_inscripcion }}</td>
+                            <td class="border px-4 py-2 text-black">{{ $clase->id }}</td>
+                            <td class="border px-4 py-2 text-black">{{ $clase->categoria->categoria }}</td> {{-- Accede al nombre de la categoría --}}
+                            <td class="border px-4 py-2 text-black">{{ $clase->instructor }}</td>
+                            <td class="border px-4 py-2 text-black">{{ $clase->cupos_totales }}</td>
+                            <td class="border px-4 py-2 text-black">{{ $clase->duracion }}</td>
+                            <td class="border px-4 py-2 text-black">{{ $clase->fecha_inicio }}</td>
+                            <td class="border px-4 py-2 text-black">{{ $clase->hora_inicio }}</td>
+                            <td class="border px-4 py-2 text-black">{{ $clase->hora_fin }}</td>
+                            <td class="border px-4 py-2 text-black">{{ $clase->costo_inscripcion }}</td>
                             <td class="border px-4 py-2 flex space-x-2">
                                 <a href="{{ route('clases.edit', $clase->id) }}" class="bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-semibold rounded-lg shadow-lg transition duration-300 transform hover:scale-105 px-2 py-1">Editar</a>
                                 <form action="{{ route('clases.destroy', $clase->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta clase?');">
@@ -51,3 +51,4 @@
         <script>window.location = "/dashboard";</script>
     @endif
 </x-app-layout>
+

@@ -9,17 +9,17 @@ class Inscripcion extends Model
 {
     use HasFactory;
 
-    protected $table = 'inscripciones'; // Añade esta línea
+    protected $table = 'inscripciones'; 
     protected $fillable = ['clase_id', 'user_id', 'cupos', 'cupos_totales'];
 
     public function clase()
     {
-        return $this->belongsTo(Clase::class);
+        return $this->belongsTo(Clase::class, 'clase_id');
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
 
